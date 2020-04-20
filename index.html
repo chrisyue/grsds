@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description"  content="包含预扣预缴和汇算清缴，收入种类包括工资和劳务报酬" />
+        <title>个人所得税计算器</title>
+        <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            h1 {
+                text-shadow: 1px 1px 1px #999;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="mt-5 mb-5 display-4 text-center">个人所得税计算器</h1>
+            <hr>
+            <h2>预缴预扣</h2>
+            <hr>
+            <h3>工资</h3>
+            <table class="table table-responsive text-nowrap" id="gzTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>月份</th>
+                        <th>税前工资</th>
+                        <th>起征点</th>
+                        <th>专项扣除</th>
+                        <th>专项附加扣除</th>
+                        <th>预扣税</th>
+                        <th>最终所得</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="btn-group btn-group-sm text-nowrap">
+                                <button class="btn btn-primary copy">复制</button>
+                                <button class="btn btn-danger remove">删除</button>
+                            </div>
+                        </td>
+                        <td>1</td>
+                        <td><input type="text" class="form-control form-control-sm" value="10000"></td>
+                        <td>5000</td>
+                        <td><input type="text" class="form-control form-control-sm" value="2223"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="3500"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>总计</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <h3>劳务</h3>
+            <table class="table table-responsive text-nowrap" id="lwTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>税前报酬</th>
+                        <th>含增值税</th>
+                        <th>增值税</th>
+                        <th>附加税比例</th>
+                        <th>附加税</th>
+                        <th>个人收入</th>
+                        <th>收入预扣</th>
+                        <th>最终所得</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="btn-group btn-group-sm text-nowrap">
+                                <button class="btn btn-primary copy">复制</button>
+                                <button class="btn btn-danger remove">删除</button>
+                            </div>
+                        </td>
+                        <td><input type="text" class="form-control form-control-sm pay" value="10000"></td>
+                        <td class="text-center"><input type="checkbox" class="form-control-input including-vat" checked></td>
+                        <td class="vat">291.26</td>
+                        <td><input type="text" value="0.07" class="form-control form-control-sm extra-ratio ratio"></td>
+                        <td class="extra">20.39</td>
+                        <td class="income">9688.35</td>
+                        <td class="tax">1550.14</td>
+                        <td class="left">8138.21</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>总计</th>
+                        <td>10000</td>
+                        <td></td>
+                        <td>291.26</td>
+                        <td></td>
+                        <td>20.39</td>
+                        <td>9688.35</td>
+                        <td>1550.14</td>
+                        <td>8138.21</td>
+                    </tr>
+                </tfoot>
+            </table>
+            <h2>汇算清缴</h2>
+            <hr>
+        </div>
+        <footer><p class="text-center"><a href="https://www.chrisyue.com">chrisyue.com</a></p></footer>
+        <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
+        <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+        <script>
+            // 劳务预扣公式
+            function lwTax(amount) {
+                if (amount <= 800) {
+                    return 0;
+                }
+
+                let base = amount * .8;
+                if (base  <= 20000) {
+                    return base * .2;
+                }
+
+                if (base <= 50000) {
+                    return base * .3;
+                }
+
+                return base * .4;
+            }
+
+            $.fn.extend({
+                sum: function () {
+                    let $table = $(this);
+                    let columns = [];
+                    let $footTds = $table.find('tfoot td');
+                    let columnCnt = $footTds.length;
+                    $table.find('tbody tr').each((index, tr) => {
+                        for (let i = 0; i < columnCnt; ++i) {
+                            let $td = $(tr).find('td').eq(i + 1);
+                            let num = +$td.html() || +$td.find('input:not(.ratio)').val();
+
+                            if (isNaN(num)) {
+                                continue;
+                            }
+
+                            if (!columns[i]) {
+                                columns[i] = 0;
+                            }
+
+                            columns[i] += num;
+                        }
+                    });
+
+                    for (let i = 0; i < columnCnt; ++i) {
+                        let num = columns[i];
+                        if (isNaN(num)) {
+                            $footTds.eq(i).empty();
+
+                            continue;
+                        }
+
+                        $footTds.eq(i).html(num.toFixed(2));
+                    }
+                }
+            });
+
+            $(() => {
+                $lwTable = $('#lwTable');
+                // 劳务记录复制
+                $('#lwTable .copy').on('click', (e) => {
+                    let $tr = $(e.target).parents('tr');
+
+                    $tr.clone(true).appendTo($tr.parent());
+                    $lwTable.sum();
+                });
+                // 删除记录
+                $('#lwTable .remove').on('click', (e) => {
+                    $(e.target).parents('tr').remove();
+
+                    $lwTable.sum();
+                });
+
+                // 劳务 vat, vat 附加税，个人预扣
+                $lwTable.on('change', 'input', (e) => {
+                    let $tr = $(e.target).parents('tr');
+                    let includingVat = $tr.find('.including-vat').is(':checked');
+
+                    let $vat = $tr.find('.vat');
+                    let $extraRatio = $tr.find('.extra-ratio');
+                    let $extra = $tr.find('.extra');
+                    let $income = $tr.find('.income');
+                    let $tax = $tr.find('.tax');
+                    let $left = $tr.find('.left');
+
+                    let pay = $tr.find('.pay').val();
+
+                    $extraRatio.prop('disabled', !includingVat);
+                    if (includingVat) {
+                        let vat = pay / 1.03 * 0.03;
+                        let extra = vat * $tr.find('.extra-ratio').val();
+                        $vat.html(vat.toFixed(2));
+                        $extra.html(extra.toFixed(2));
+                        let income = pay - vat - extra;
+                        $income.html(income.toFixed(2));
+                        let tax = lwTax(income);
+                        $tax.html(tax.toFixed(2));
+                        let left = income - tax;
+                        $left.html(left.toFixed(2));
+
+                        $lwTable.sum();
+
+                        return;
+                    }
+
+                    $vat.html('N/A');
+                    $extra.html('N/A');
+                    let tax = lwTax(pay);
+                    $tax.html(tax.toFixed(2));
+                    $left.html((pay - tax).toFixed(2));
+
+                    $lwTable.sum();
+                });
+
+                // 工资
+            });
+        </script>
+    </body>
+</html>
