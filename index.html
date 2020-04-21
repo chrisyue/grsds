@@ -24,13 +24,13 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th>月份</th>
                         <th>税前工资</th>
                         <th>起征点</th>
                         <th>专项扣除</th>
                         <th>专项附加扣除</th>
                         <th>预扣税</th>
-                        <th>最终所得</th>
+                        <th>税后工资</th>
+                        <th>到手工资</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,25 +41,25 @@
                                 <button class="btn btn-danger remove">删除</button>
                             </div>
                         </td>
-                        <td>1</td>
-                        <td><input type="text" class="form-control form-control-sm" value="10000"></td>
-                        <td>5000</td>
-                        <td><input type="text" class="form-control form-control-sm" value="2223"></td>
-                        <td><input type="text" class="form-control form-control-sm" value="3500"></td>
-                        <td></td>
-                        <td></td>
+                        <td><input type="text" class="form-control form-control-sm salary" value="10000"></td>
+                        <td class="cutoff1">5000</td>
+                        <td><input type="text" class="form-control form-control-sm cutoff2" value="2223"></td>
+                        <td><input type="text" class="form-control form-control-sm cutoff3" value="2000"></td>
+                        <td class="tax">23.31</td>
+                        <td class="left">9976.69</td>
+                        <td class="income">7753.69</td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <th>总计</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>10000.00</td>
+                        <td>5000.00</td>
+                        <td>2223.00</td>
+                        <td>2000.00</td>
+                        <td>23.31</td>
+                        <td>9976.69</td>
+                        <td>7753.69</td>
                     </tr>
                 </tfoot>
             </table>
@@ -112,11 +112,41 @@
             </table>
             <h2>汇算清缴</h2>
             <hr>
+            <p>
+                <button class="btn btn-primary">按预缴信息直接汇算清缴</button>
+            </p>
         </div>
         <footer><p class="text-center"><a href="https://www.chrisyue.com">chrisyue.com</a></p></footer>
         <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
         <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
         <script>
+            // 工资公式
+            function gzTax(amount) {
+                if (amount <= 0) {
+                    return 0;
+                }
+                if (amount <= 36000) {
+                    return amount * .03;
+                }
+                if (amount <= 144000) {
+                    return amount * .1 - 2520;
+                }
+                if (amount <= 300000) {
+                    return amount * .2 - 16920;
+                }
+                if (amount <= 420000) {
+                    return amount * .25 - 31920;
+                }
+                if (amount <= 660000) {
+                    return amount * .3 - 52920;
+                }
+                if (amount <= 960000) {
+                    return amount * .35 - 85920;
+                }
+
+                return amount * .45 - 181920;
+            }
+
             // 劳务预扣公式
             function lwTax(amount) {
                 if (amount <= 800) {
@@ -171,17 +201,78 @@
                 }
             });
 
+            // 刷新工资表
+            function refreshGzTable($gzTable) {
+                let totalSalary = 0;
+                let totalCutoff = 0;
+                let totalTax = 0;
+                $gzTable.find('tbody tr').each((i, tr) => {
+                    let $tr = $(tr);
+                    let salary = +$tr.find('.salary').val();
+                    totalSalary += salary;
+                    let cutoff1 = +$tr.find('.cutoff1').html();
+                    let cutoff2 = +$tr.find('.cutoff2').val();
+                    let cutoff3 = +$tr.find('.cutoff3').val();
+                    let cutoff = cutoff1 + cutoff2 + cutoff3;
+                    totalCutoff += cutoff;
+
+                    let tax = gzTax(totalSalary - totalCutoff).toFixed(2);
+                    let monthTax = tax - totalTax;
+                    totalTax = tax;
+
+                    let left = salary - monthTax;
+                    let income = left - cutoff2;
+
+                    $tr.find('.tax').html(monthTax.toFixed(2));
+                    $tr.find('.left').html(left.toFixed(2));
+                    $tr.find('.income').html(income.toFixed(2));
+                });
+
+                $gzTable.sum();
+            }
+
             $(() => {
-                $lwTable = $('#lwTable');
+                let $gzTable = $('#gzTable');
+                // 工资记录复制
+                $gzTable.find('.copy').on('click', (e) => {
+                    if (12 === $gzTable.find('tbody tr').length) {
+                        let message = '12 个月的记录已满，您是否还需要添加别的公司的工资收入记录？';
+                        if (confirm(message)) {
+                            return;
+                        }
+
+                        return;
+                    }
+
+                    let $tr = $(e.target).parents('tr');
+
+                    let $tr2 = $tr.clone(true);
+                    $tr.parent().append($tr2);
+
+                    refreshGzTable($gzTable);
+                });
+                // 删除记录
+                $gzTable.find('.remove').on('click', (e) => {
+                    $(e.target).parents('tr').remove();
+
+                    refreshGzTable($gzTable);
+                });
+
+                // 工资预扣
+                $gzTable.on('change', 'input', (e) => {
+                    refreshGzTable($gzTable);
+                });
+
+                let $lwTable = $('#lwTable');
                 // 劳务记录复制
-                $('#lwTable .copy').on('click', (e) => {
+                $lwTable.find('.copy').on('click', (e) => {
                     let $tr = $(e.target).parents('tr');
 
                     $tr.clone(true).appendTo($tr.parent());
                     $lwTable.sum();
                 });
                 // 删除记录
-                $('#lwTable .remove').on('click', (e) => {
+                $lwTable.find('.remove').on('click', (e) => {
                     $(e.target).parents('tr').remove();
 
                     $lwTable.sum();
