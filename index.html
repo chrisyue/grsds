@@ -271,8 +271,8 @@
                     totalCutoff += cutoff;
 
                     let tax = gzTax(totalSalary - totalCutoff).toFixed(2);
-                    let monthTax = tax - totalTax;
-                    totalTax = tax;
+                    let monthTax = Math.max((tax - totalTax), 0);
+                    totalTax = Math.max(tax, totalTax);
 
                     let left = salary - monthTax;
                     let income = left - cutoff2;
