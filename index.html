@@ -121,10 +121,10 @@
                 或者通过以下表单汇算清缴
             </p>
             <form class="form-inline">
-                <input type="text" class="form-control mr-sm-2" id="qngzsr" placeholder="全年工资收入">
-                <input type="text" class="form-control mr-sm-2" id="qnlwsr" placeholder="全年劳务收入">
-                <input type="text" class="form-control mr-sm-2" id="qnzxkc" placeholder="全年专项扣除" required>
-                <input type="text" class="form-control mr-sm-2" id="qnfjkc" placeholder="全年专项附加扣除" required>
+                <input type="text" class="form-control mr-sm-2 mb-2" id="qngzsr" placeholder="全年工资收入">
+                <input type="text" class="form-control mr-sm-2 mb-2" id="qnlwsr" placeholder="全年劳务收入">
+                <input type="text" class="form-control mr-sm-2 mb-2" id="qnzxkc" placeholder="全年专项扣除" required>
+                <input type="text" class="form-control mr-sm-2 mb-2" id="qnfjkc" placeholder="全年专项附加扣除" required>
                 <button class="btn btn-primary" type="submit">提交</button>
             </form>
 
@@ -164,7 +164,13 @@
                 </div>
             </div>
         </div>
-        <footer><p class="text-center"><a href="https://www.chrisyue.com">chrisyue.com</a></p></footer>
+        <footer>
+            <p class="text-center">
+                <a href="https://github.com/chrisyue/grsds">在 GitHub 关注此项目</a>
+                |
+                <a href="https://www.chrisyue.com">chrisyue.com</a>
+            </p>
+        </footer>
         <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
         <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
         <script>
@@ -284,7 +290,7 @@
                 // 工资记录复制
                 $gzTable.find('.copy').on('click', (e) => {
                     if (12 === $gzTable.find('tbody tr').length) {
-                        let message = '12 个月的记录已满，您是否还需要添加别的公司的工资收入记录？';
+                        let message = '12 个月的记录已满，您是否还需要添加别的公司的工资收入记录？（暂未实现）';
                         if (confirm(message)) {
                             return;
                         }
