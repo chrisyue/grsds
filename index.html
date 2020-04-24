@@ -20,7 +20,7 @@
             <h2>预缴预扣</h2>
             <hr>
             <h3>工资</h3>
-            <table class="table table-striped table-responsive text-nowrap" id="gzTable">
+            <table class="table table-striped table-responsive text-nowrap gzTable">
                 <thead>
                     <tr>
                         <th></th>
@@ -56,13 +56,16 @@
                         <td class="grsd">10000.00</td>
                         <td>5000.00</td>
                         <td class="zxkc">2223.00</td>
-                        <td class="fjkc">2000.00</td>
+                        <td>2000.00</td>
                         <td>23.31</td>
                         <td>9976.69</td>
                         <td>7753.69</td>
                     </tr>
                 </tfoot>
             </table>
+            <p>
+                <button class="btn btn-primary more-salary-records">添加更多公司的工资记录</button>
+            </p>
 
             <h3>劳务</h3>
             <table class="table table-striped table-responsive text-nowrap" id="lwTable">
@@ -125,7 +128,7 @@
                 <input type="text" class="form-control mr-sm-2 mb-2" id="qnlwsr" placeholder="全年劳务收入">
                 <input type="text" class="form-control mr-sm-2 mb-2" id="qnzxkc" placeholder="全年专项扣除" required>
                 <input type="text" class="form-control mr-sm-2 mb-2" id="qnfjkc" placeholder="全年专项附加扣除" required>
-                <button class="btn btn-primary" type="submit">提交</button>
+                <button class="btn btn-primary mr-sm-2 mb-2" type="submit">提交</button>
             </form>
 
             <div class="modal fade" id="qjModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -164,7 +167,10 @@
                 </div>
             </div>
         </div>
-        <footer>
+        <p class="text-center mt-5 mb-5">
+            <img src="http://img.chrisyue.com/wx-reward-code.jpg" alt="微信打赏码" title="微信打赏码" width="220" height="220">
+        </p>
+        <footer class="mt-5">
             <p class="text-center">
                 <a href="https://github.com/chrisyue/grsds">在 GitHub 关注此项目</a>
                 |
@@ -217,6 +223,14 @@
                 }
 
                 return base * .4;
+            }
+
+            function addNewGzTable() {
+                let $lastTable = $('.gzTable').last();
+                let $newTable = $lastTable.clone(true)
+                $newTable.find('tr:not(:first-child)').remove();
+                refreshGzTable($newTable);
+                $newTable.insertAfter($lastTable);
             }
 
             $.fn.extend({
@@ -286,13 +300,14 @@
             }
 
             $(() => {
-                let $gzTable = $('#gzTable');
                 // 工资记录复制
-                $gzTable.find('.copy').on('click', (e) => {
+                let $gzTable = $('.gzTable');
+                $('.gzTable').find('.copy').on('click', (e) => {
+                    let $gzTable = $(e.target).parents('.gzTable');
                     if (12 === $gzTable.find('tbody tr').length) {
-                        let message = '12 个月的记录已满，您是否还需要添加别的公司的工资收入记录？（暂未实现）';
+                        let message = '12 个月的记录已满，您是否还需要添加别的公司的工资收入记录？';
                         if (confirm(message)) {
-                            return;
+                            addNewGzTable();
                         }
 
                         return;
@@ -309,12 +324,12 @@
                 $gzTable.find('.remove').on('click', (e) => {
                     $(e.target).parents('tr').remove();
 
-                    refreshGzTable($gzTable);
+                    refreshGzTable($(e.target).parents('.gzTable'));
                 });
 
                 // 工资预扣
                 $gzTable.on('change', 'input', (e) => {
-                    refreshGzTable($gzTable);
+                    refreshGzTable($(e.target).parents('.gzTable'));
                 });
 
                 let $lwTable = $('#lwTable');
@@ -375,13 +390,19 @@
                 });
 
                 $('.qj').on('click', (e) => {
-                    let zhsd = +$('#gzTable .grsd').html();
+                    let zhsd = 0;
+                    $('.gzTable .grsd').each((i, td) => {
+                        zhsd += +$(td).html();
+                    });
                     let lwsd = +$('#lwTable .grsd').html();
                     if (lwsd) {
                         zhsd += lwsd * .8;
                     }
-                    let zxkc = +$('table .zxkc').html();
-                    let fjkc = +$('table .fjkc').html();
+                    let zxkc = 0;
+                    $('table .zxkc').each((i, td) => {
+                        zxkc += +$(td).html();
+                    });
+                    let fjkc = (+$('.cutoff3').first().val()) * 12;
 
                     $('#zhsd').html(zhsd.toFixed(2));
                     $('#zxkc').html(zxkc.toFixed(2));
@@ -411,6 +432,10 @@
                     $('#grsds').html(grsds.toFixed(2));
 
                     $('#qjModal').modal();
+                });
+
+                $('.more-salary-records').on('click', (e) => {
+                    addNewGzTable();
                 });
             });
         </script>
