@@ -220,16 +220,20 @@
                     return 0;
                 }
 
-                let base = amount * .8;
+                let base = amount - 800;
+                if (amount > 4000) {
+                    base = amount * .8;
+                }
+
                 if (base  <= 20000) {
                     return base * .2;
                 }
 
                 if (base <= 50000) {
-                    return base * .3;
+                    return base * .3 - 2000;
                 }
 
-                return base * .4;
+                return base * .4 - 7000;
             }
 
             function addNewGzTable() {
